@@ -38,16 +38,6 @@ export interface User {
   address: string
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const currentUser: User = {
-  id: 1,
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  phone: "+1 555-0123",
-  address: "123 Main St, San Francisco, CA 94105",
-}
-
 export class OutOfStockError extends Error {
   constructor() { super("Out of stock") }
 }
@@ -151,19 +141,33 @@ export async function payOrder(orderNo: string, token: string): Promise<Order> {
   return toOrder(await res.json())
 }
 
-export async function listOrders(_token: string): Promise<Order[]> {
-  throw new Error("Not implemented — waiting for orders backend")
+export async function listOrders(token: string): Promise<Order[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, {
+    headers: authHeaders(token),
+  })
+  if (!res.ok) throw new Error("Failed to fetch orders")
+  const data: OrderResponse[] = await res.json()
+  return data.map(toOrder)
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
-export async function getUser(): Promise<User> {
-  return currentUser
+export async function getUser(token: string): Promise<User> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+    headers: authHeaders(token),
+  })
+  if (!res.ok) throw new Error("Failed to fetch user")
+  return res.json()
 }
 
-export async function updateUser(data: Partial<Omit<User, "id">>): Promise<User> {
-  Object.assign(currentUser, data)
-  return currentUser
+export async function updateUser(data: Omit<User, "id">, token: string): Promise<User> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error("Failed to update user")
+  return res.json()
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

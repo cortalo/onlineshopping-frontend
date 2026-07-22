@@ -43,7 +43,7 @@ function Field({ label, value }: { label: string; value: string }) {
   )
 }
 
-export default function AccountClient() {
+export default function AccountClient({ token }: { token: string }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -54,16 +54,16 @@ export default function AccountClient() {
   })
 
   useEffect(() => {
-    getUser().then(data => {
+    getUser(token).then(data => {
       setUser(data)
       reset(data)
       setLoading(false)
-    })
-  }, [reset])
+    }).catch(() => setLoading(false))
+  }, [token, reset])
 
   async function onSubmit(values: FormValues) {
     setSaving(true)
-    const updated = await updateUser(values)
+    const updated = await updateUser(values, token)
     setUser(updated)
     setEditing(false)
     setSaving(false)
