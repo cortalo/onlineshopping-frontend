@@ -2,7 +2,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { listProducts, formatPrice, type Product } from "@/lib/api"
 
 export const dynamic = "force-dynamic"
@@ -36,16 +35,16 @@ function ProductCard({ product }: { product: Product }) {
       </CardContent>
 
       <CardFooter className="pt-0">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          disabled={product.availableStock === 0}
+        <Link
+          href={`/products/${product.id}`}
+          className={`w-full text-center text-sm py-1.5 rounded-md border border-border transition-colors
+            ${product.availableStock === 0
+              ? "pointer-events-none opacity-50"
+              : "hover:bg-muted"
+            }`}
         >
-          <Link href={`/products/${product.id}`} className="w-full">
-            {product.availableStock === 0 ? "Sold out" : "View details"}
-          </Link>
-        </Button>
+          {product.availableStock === 0 ? "Sold out" : "View details"}
+        </Link>
       </CardFooter>
     </Card>
   )
