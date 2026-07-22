@@ -17,10 +17,8 @@ export interface Product {
 }
 
 export type OrderStatus =
-  | 0   // out of stock — order could not be created
   | 1   // created, awaiting payment
-  | 2   // paid, awaiting shipment
-  | 99  // closed — payment timeout
+  | 2   // paid
 
 export interface Order {
   orderNo: string
@@ -50,7 +48,37 @@ const currentUser: User = {
   address: "123 Main St, San Francisco, CA 94105",
 }
 
-// ─── Backend response type ────────────────────────────────────────────────────
+export class OutOfStockError extends Error {
+  constructor() { super("Out of stock") }
+}
+
+// ─── Backend response types ───────────────────────────────────────────────────
+
+interface OrderResponse {
+  order_no: string
+  status: number
+  commodity_id: number
+  product_name: string
+  amount: number
+  create_time: string
+  pay_time: string | null
+}
+
+function toOrder(r: OrderResponse): Order {
+  return {
+    orderNo: r.order_no,
+    status: r.status as OrderStatus,
+    productId: r.commodity_id,
+    productName: r.product_name,
+    amount: r.amount,
+    createdAt: r.create_time,
+    paidAt: r.pay_time,
+  }
+}
+
+function authHeaders(token: string) {
+  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+}
 
 interface CommodityResponse {
   id: number
@@ -94,19 +122,36 @@ export async function getProduct(id: number): Promise<Product | null> {
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
-export async function createOrder(_productId: number): Promise<Order> {
-  throw new Error("Not implemented — waiting for orders backend")
+export async function createOrder(productId: number, token: string): Promise<Order> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ product_id: productId }),
+  })
+  if (res.status === 409) throw new OutOfStockError()
+  if (!res.ok) throw new Error("Failed to create order")
+  return toOrder(await res.json())
 }
 
-export async function getOrder(_orderNo: string): Promise<Order | null> {
-  throw new Error("Not implemented — waiting for orders backend")
+export async function getOrder(orderNo: string, token: string): Promise<Order | null> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderNo}`, {
+    headers: authHeaders(token),
+  })
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error("Failed to fetch order")
+  return toOrder(await res.json())
 }
 
-export async function payOrder(_orderNo: string): Promise<Order> {
-  throw new Error("Not implemented — waiting for orders backend")
+export async function payOrder(orderNo: string, token: string): Promise<Order> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderNo}/pay`, {
+    method: "POST",
+    headers: authHeaders(token),
+  })
+  if (!res.ok) throw new Error("Failed to pay order")
+  return toOrder(await res.json())
 }
 
-export async function listOrders(): Promise<Order[]> {
+export async function listOrders(_token: string): Promise<Order[]> {
   throw new Error("Not implemented — waiting for orders backend")
 }
 

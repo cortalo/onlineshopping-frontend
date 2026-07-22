@@ -19,16 +19,18 @@ function formatDate(iso: string) {
   })
 }
 
-export default function OrderResultClient({ orderNo }: { orderNo: string }) {
+export default function OrderResultClient({ orderNo, token }: { orderNo: string; token: string }) {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getOrder(orderNo).then(data => {
-      setOrder(data)
-      setLoading(false)
-    })
-  }, [orderNo])
+    getOrder(orderNo, token)
+      .then(data => {
+        setOrder(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [orderNo, token])
 
   if (loading) {
     return (

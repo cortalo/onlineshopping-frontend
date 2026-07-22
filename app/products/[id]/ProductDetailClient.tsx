@@ -8,7 +8,7 @@ import { ChevronLeft, Minus, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { createOrder, formatPrice, type Product } from "@/lib/api"
+import { createOrder, formatPrice, OutOfStockError, type Product } from "@/lib/api"
 
 function StockBadge({ stock }: { stock: number }) {
   if (stock === 0) return <Badge variant="destructive">Out of stock</Badge>
@@ -16,7 +16,7 @@ function StockBadge({ stock }: { stock: number }) {
   return <span className="text-sm text-muted-foreground">{stock} in stock</span>
 }
 
-export default function ProductDetailClient({ product }: { product: Product }) {
+export default function ProductDetailClient({ product, token }: { product: Product; token: string }) {
   const router = useRouter()
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -34,15 +34,14 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     setBuying(true)
     setError("")
     try {
-      const order = await createOrder(product.id)
-      if (order.status === 0) {
-        setError("Sorry, this item just went out of stock.")
-        setBuying(false)
-        return
-      }
+      const order = await createOrder(product.id, token)
       router.push(`/orders/${order.orderNo}`)
-    } catch {
-      setError("Something went wrong. Please try again.")
+    } catch (err) {
+      if (err instanceof OutOfStockError) {
+        setError("Sorry, this item just went out of stock.")
+      } else {
+        setError("Something went wrong. Please try again.")
+      }
       setBuying(false)
     }
   }
