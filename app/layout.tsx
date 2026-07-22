@@ -32,7 +32,8 @@ export default function RootLayout({
         <Nav />
         <main className="flex-1">{children}</main>
         <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-          © 2025 ShopHub. All rights reserved.
+          © 2025 ShopHub. All rights reserved.{" "}
+          <a href="/health" className="underline hover:text-foreground">System status</a>
         </footer>
       </body>
     </html>
