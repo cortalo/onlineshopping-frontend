@@ -19,13 +19,14 @@ export default async function Nav() {
           </Link>
 
           {/* Search */}
-          <div className="hidden sm:flex flex-1 max-w-sm mx-8">
+          <form action="/search" className="hidden sm:flex flex-1 max-w-sm mx-8">
             <input
               type="text"
+              name="q"
               placeholder="Search products…"
               className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
-          </div>
+          </form>
 
           {/* Nav links */}
           <nav className="flex items-center gap-1">

@@ -110,6 +110,15 @@ export async function getProduct(id: number): Promise<Product | null> {
   return toProduct(data)
 }
 
+export async function searchProducts(query: string): Promise<Product[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/commodities/search`)
+  url.searchParams.set("q", query)
+  const res = await fetch(url)
+  if (!res.ok) throw new Error("Failed to search products")
+  const data: CommodityResponse[] = await res.json()
+  return data.map(toProduct)
+}
+
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 export async function createOrder(productId: number, token: string): Promise<Order> {
